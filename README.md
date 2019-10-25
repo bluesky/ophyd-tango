@@ -14,6 +14,9 @@ Tango. The goal of this project is to see what it would take to get ophyd
 working with Tango, and to iron out any EPICS-specific assumptions that may have
 leaked into ophyd's design despite the authors' best efforts.
 
+**This experiment is in its very early stages, currently just an hour's worth of
+hacking.**
+
 ## Prerequisites
 
 This repo includes a ``docker-compose.yaml`` file obtained from the Tango
