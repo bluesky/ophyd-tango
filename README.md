@@ -1,3 +1,19 @@
+# Experimental Ophyd–Tango Integration
+
+## What is this?
+
+Ophyd endeavors to provide a hardware abstraction that is control-layer
+agonostic. So far this has been validated on:
+
+* Channel Access (two different I/O libraries, pyepics and caproto)
+* One-off socket protocols specific to particular hardwarwe
+* Simualated hardware in Python
+
+It has not yet been validated on a second fully-featured control layer such as
+Tango. The goal of this project is to see what it would take to get ophyd
+working with Tango, and to iron out any EPICS-specific assumptions that may have
+leaked into ophyd's design despite the authors' best efforts.
+
 ## Prerequisites
 
 This repo includes a ``docker-compose.yaml`` file obtained from the Tango
