@@ -86,7 +86,7 @@ ipython -i ophyd_tango.py
 
 Execute a simple bluesky plan like so:
 
-```py
+```
 In [1]: RE(count([tango_attr], 10, 1), LiveTable(['double_scalar']))                                                                                                                          
 +-----------+------------+---------------+
 |   seq_num |       time | double_scalar |
