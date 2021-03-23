@@ -46,7 +46,7 @@ docker-compose up --build
 
 ```sh
 conda create -n pytango -c tango-controls python=3.7 pytango ipython
-pip install ophyd  # I used pip to avoid conda-forge vs defaults conflicts.
+pip install ophyd bluesky  # I used pip to avoid conda-forge vs defaults conflicts.
 ```
 
 ## Overview of Design So Far
