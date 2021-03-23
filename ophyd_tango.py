@@ -7,8 +7,15 @@ import tango
 
 class TangoAttribute:
     "Wrap a tango.AttributeProxy in the bluesky interface."
-    def __init__(self, attribute_proxy: tango.AttributeProxy, *, parent=None,
-                 kind=Kind.normal, name=None):
+
+    def __init__(
+        self,
+        attribute_proxy: tango.AttributeProxy,
+        *,
+        parent=None,
+        kind=Kind.normal,
+        name=None,
+    ):
         self._attribute_proxy = attribute_proxy
         if name is None:
             name = self._attribute_proxy.name()
@@ -21,16 +28,17 @@ class TangoAttribute:
 
     def read(self):
         reading = self._attribute_proxy.read()
-        return {self.name:
-                    {'value': reading.value,
-                     'timestamp': reading.time.totime()}}
+        return {self.name: {"value": reading.value, "timestamp": reading.time.totime()}}
 
     def describe(self):
-        return {self.name:
-                    {'shape': extract_shape(self._attribute_proxy.read()),
-                     'dtype': 'number', # jsonschema types
-                     'source': self._attribute_proxy.name(),
-                     'unit': self._attribute_proxy.get_config().unit}}
+        return {
+            self.name: {
+                "shape": extract_shape(self._attribute_proxy.read()),
+                "dtype": "number",  # jsonschema types
+                "source": self._attribute_proxy.name(),
+                "unit": self._attribute_proxy.get_config().unit,
+            }
+        }
 
     def read_configuration(self):
         return {}
@@ -40,8 +48,7 @@ class TangoAttribute:
 
 
 class TangoWritableAttribute(TangoAttribute):
-
-    def set(self, value): 
+    def set(self, value):
         status = Status()
 
         def write_and_wait():
@@ -93,11 +100,11 @@ class TangoDevice:
 
 class TangoThingie(TangoDevice):
     READ_FIELDS = [
-        'string_scalar',
-        'uchar_scalar',
-        'ulong64_scalar',
-        'ushort_scalar',
-        'ulong_scalar',
+        "string_scalar",
+        "uchar_scalar",
+        "ulong64_scalar",
+        "ushort_scalar",
+        "ulong_scalar",
     ]
 
 
@@ -110,13 +117,14 @@ def extract_shape(reading):
     return shape
 
 
-device_proxy = tango.DeviceProxy('sys/tg_test/1')
-attr_proxy = tango.AttributeProxy('sys/tg_test/1/ampli')
+device_proxy = tango.DeviceProxy("sys/tg_test/1")
+attr_proxy = tango.AttributeProxy("sys/tg_test/1/ampli")
 
 tango_attr = TangoWritableAttribute(attr_proxy)
 tango_device = TangoThingie(device_proxy, name="thingie")
 
 from bluesky import RunEngine
+
 RE = RunEngine()
 from bluesky.plans import count
 from bluesky.callbacks.core import LiveTable
