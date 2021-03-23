@@ -87,7 +87,8 @@ ipython -i ophyd_tango.py
 Execute a simple bluesky plan like so:
 
 ```
-In [1]: RE(count([tango_attr], 10, 1), LiveTable(['double_scalar']))                                                                                                                          
+In [1]: RE(count([tango_attr], 10, 1), LiveTable(['double_scalar']))
+
 +-----------+------------+---------------+
 |   seq_num |       time | double_scalar |
 +-----------+------------+---------------+
@@ -113,3 +114,44 @@ Out[1]: ('20a661f7-665c-412f-b4a0-78f69aaced52',)
   interface may need to be extended to fully utilize it.
 * See ``first_steps.md`` for a log of some basic ``tango`` usage, including
   subscriptions.
+
+## IPython on Docker
+
+pytango is not supported on macOS.  To run it, you can either use a VM or
+this provided ``Dockerfile``.
+
+```bash
+# Bring up tango
+$ make compose
+
+# In a separate terminal, build the ophyd-tango environment and run an IPython
+# shell:
+$ make run
+docker run --network ophyd-tango_default -it ophyd-tango
+Python 3.7.10 | packaged by conda-forge | (default, Feb 19 2021, 16:07:37)
+Type 'copyright', 'credits' or 'license' for more information
+IPython 7.21.0 -- An enhanced Interactive Python. Type '?' for help.
+
+In [1]: RE(count([tango_attr], 10, 1), LiveTable(['double_scalar']))
+   ...:
+
+
++-----------+------------+---------------+
+|   seq_num |       time | double_scalar |
++-----------+------------+---------------+
+|         1 | 16:01:03.6 |       248.396 |
+|         2 | 16:01:04.6 |       248.396 |
+|         3 | 16:01:05.6 |       247.277 |
+|         4 | 16:01:06.6 |       247.277 |
+|         5 | 16:01:07.7 |       246.083 |
+|         6 | 16:01:08.7 |       246.083 |
+|         7 | 16:01:09.7 |       244.814 |
+|         8 | 16:01:10.7 |       244.814 |
+|         9 | 16:01:11.7 |       243.471 |
+|        10 | 16:01:12.7 |       243.471 |
++-----------+------------+---------------+
+generator count ['039dd2e0'] (scan num: 1)
+
+
+Out[1]: ('039dd2e0-e033-49c-ba0c-509838428bcc',)
+```

@@ -1,4 +1,4 @@
-version: '2'
+version: '3'
 services:
   tango-db:
     image: tangocs/mysql:9.2.2
