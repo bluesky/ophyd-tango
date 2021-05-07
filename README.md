@@ -106,6 +106,39 @@ generator count ['20a661f7'] (scan num: 1)
 Out[1]: ('20a661f7-665c-412f-b4a0-78f69aaced52',)
 ```
 
+## Now with Sardana
+
+Sardana server:
+
+```
+conda install -c conda-forge sardana
+export TANGO_HOST=127.0.0.1:10000
+Sardana test  # start device server
+```
+
+In a real scenario, the Sardana server would be the thing talking to hardware.
+Use spock client to populate the device server with dummy devices.
+
+```
+export TANGO_HOST=127.0.0.1:10000
+$ spock
+sar_demo  # an IPython magic ("macro")
+# Then it is fine to exit.
+# The dummy devices persist as long as the container's database persists.
+```
+
+Jive is another Tango client that tells you what it is the database.
+
+```
+conda install -c beenje jive 
+export TANGO_HOST=127.0.0.1:10000
+jive
+```
+
+Use this to get Device names.
+
+
+
 ## Notes
 
 * Next step is to handle ``set()`` and ``subscribe()``. Tango's subscription

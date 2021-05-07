@@ -65,6 +65,10 @@ class TangoWritableAttribute(TangoAttribute):
         threading.Thread(target=write_and_wait).start()
         return status
 
+type_map = {
+    tango.AttrWriteType.READ_WRITE: TangoWritableAttribute,
+    tango.AttrWriteType.READ: TangoAttribute,
+}
 
 class TangoDevice:
     "Wrap a tango.DeviceProxy in the Bluesky interface."
@@ -73,11 +77,12 @@ class TangoDevice:
     CONFIG_FIELDS = []
 
     def __init__(self, device_proxy: tango.DeviceProxy, *, name):
+        self.parent = None
         self.name = name
         self.attributes = []
         for field in self.READ_FIELDS:
-            self.attributes.append(
-                TangoAttribute(
+            class_ = type_map[device_proxy.get_attribute_config(field).writable]
+            obj = class_(
                     tango.AttributeProxy(
                         f"{device_proxy.name()}/{field}",
                     ),
@@ -85,14 +90,46 @@ class TangoDevice:
                     kind=Kind.normal,
                     name="_".join([self.name, field]),
                 )
-            )
+            self.attributes.append(obj)
+            setattr(self, field, obj)
         # TODO CONFIG_FIELDS
+
+    def set(self):
+        # TODO Implement this next time.
+        ...
 
     def read(self):
         res = {}
         for attr in self.attributes:
             try:
                 res.update(attr.read())
+            except Exception:
+                continue
+        return res
+
+    def read_configuration(self):
+        res = {}
+        for attr in self.attributes:
+            try:
+                res.update(attr.read_configuration())
+            except Exception:
+                continue
+        return res
+
+    def describe_configuration(self):
+        res = {}
+        for attr in self.attributes:
+            try:
+                res.update(attr.describe_configuration())
+            except Exception:
+                continue
+        return res
+
+    def describe(self):
+        res = {}
+        for attr in self.attributes:
+            try:
+                res.update(attr.describe())
             except Exception:
                 continue
         return res
@@ -122,6 +159,19 @@ attr_proxy = tango.AttributeProxy("sys/tg_test/1/ampli")
 
 tango_attr = TangoWritableAttribute(attr_proxy)
 tango_device = TangoThingie(device_proxy, name="thingie")
+
+motor_proxy = tango.DeviceProxy("motor/motctrl01/1")
+
+class TangoMotor(TangoDevice):
+    READ_FIELDS = [
+        "position",
+        "velocity",
+    ]
+
+
+motor = TangoMotor(motor_proxy, name="motor")
+
+
 
 from bluesky import RunEngine
 
