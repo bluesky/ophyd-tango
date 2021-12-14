@@ -1,4 +1,5 @@
 import threading
+import time
 
 from ophyd import Kind
 from ophyd.status import Status
@@ -65,10 +66,38 @@ class TangoWritableAttribute(TangoAttribute):
         threading.Thread(target=write_and_wait).start()
         return status
 
+
+class TangoMotorPosition(TangoAttribute):
+
+    """ Wraps a (Sardana) motor position attribute """
+
+    def set(self, value):
+        status = Status()
+
+        def write_and_wait():
+            """
+            Write position and block until write has taken effect,
+            meaning that the attribute quality has gone back to
+            "VALID". While the attribute is changing to the new position the
+            quality is usually "CHANGING".
+            """
+            try:
+                self._attribute_proxy.write(value)
+            except tango.DevFailed as exc:
+                status.set_exception(exc)
+            while self._attribute_proxy.read().quality != tango.AttrQuality.ATTR_VALID:
+                time.sleep(0.1)
+            status.set_finished()
+
+        threading.Thread(target=write_and_wait).start()
+        return status
+
+
 type_map = {
     tango.AttrWriteType.READ_WRITE: TangoWritableAttribute,
     tango.AttrWriteType.READ: TangoAttribute,
 }
+
 
 class TangoDevice:
     "Wrap a tango.DeviceProxy in the Bluesky interface."
@@ -154,14 +183,6 @@ def extract_shape(reading):
     return shape
 
 
-device_proxy = tango.DeviceProxy("sys/tg_test/1")
-attr_proxy = tango.AttributeProxy("sys/tg_test/1/ampli")
-
-tango_attr = TangoWritableAttribute(attr_proxy)
-tango_device = TangoThingie(device_proxy, name="thingie")
-
-motor_proxy = tango.DeviceProxy("motor/motctrl01/1")
-
 class TangoMotor(TangoDevice):
     READ_FIELDS = [
         "position",
@@ -169,12 +190,27 @@ class TangoMotor(TangoDevice):
     ]
 
 
-motor = TangoMotor(motor_proxy, name="motor")
+if __name__ == "__main__":
+    from bluesky.plans import count
+    from bluesky.callbacks.core import LiveTable
+    from bluesky import RunEngine
+    from bluesky.plans import scan
+    from bluesky.callbacks.best_effort import BestEffortCallback
 
+    device_proxy = tango.DeviceProxy("sys/tg_test/1")
+    attr_proxy = tango.AttributeProxy("sys/tg_test/1/ampli")
 
+    tango_attr = TangoWritableAttribute(attr_proxy)
+    tango_device = TangoThingie(device_proxy, name="thingie")
 
-from bluesky import RunEngine
+    motor_proxy = tango.DeviceProxy("motor/motctrl04/1")
 
-RE = RunEngine()
-from bluesky.plans import count
-from bluesky.callbacks.core import LiveTable
+    # motor = TangoMotor(motor_proxy, name="motor")
+    short_scalar = TangoAttribute(tango.AttributeProxy("sys/tg_test/1/short_scalar"))
+    motor1 = TangoMotorPosition(tango.AttributeProxy("motor/motctrl01/1/position"),
+                                name="motor1")
+    RE = RunEngine()
+    bec = BestEffortCallback()
+    RE.subscribe(bec)
+
+    RE(scan([short_scalar], motor1, 0, 100, 10))
